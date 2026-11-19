@@ -1,16 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Vasicek Bond Risk Simulator</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
-  <main>
-    <h1>Vasicek Bond Risk Simulator</h1>
-    <p>Monte Carlo Pricing and Interest-Rate Risk of a Sri Lankan Treasury Bond Using Vasicek</p>
-  </main>
+  <div class="page">
+    <div class="masthead">
+      <h1 class="serif">Vasicek Bond Risk Simulator</h1>
+      <button id="themeToggle" type="button" aria-pressed="false">Dark mode</button>
+    </div>
+    <p class="lede">What is a 5-year Sri Lankan Treasury bond worth, and how much could it lose in a year if interest
+      rates rise? Shape the behaviour of interest rates, press Start, and watch thousands of possible futures build the
+      answer.</p>
+
+    <div class="layout">
+      <section class="rail" aria-label="Simulation settings">
+        <div class="seg" role="group" aria-label="Fitted values">
+          <button id="presetCalm" aria-pressed="false">Calm period<br>2024 to 2026</button>
+          <button id="presetCrisis" aria-pressed="false">Full history<br>incl. 2022 crisis</button>
+        </div>
+        <p class="seg-note" id="presetNote"></p>
+
+        <div class="field">
+          <label for="kappa">Reversion speed κ <output id="kappaOut"></output></label>
+          <input type="range" id="kappa" min="0.05" max="6" step="0.005">
+          <small>How strongly the rate is pulled back to its long-run level, per year.</small>
+        </div>
+        <div class="field">
+          <label for="theta">Long-run rate θ <output id="thetaOut"></output></label>
+          <input type="range" id="theta" class="amber" min="1" max="25" step="0.01">
+          <small>The level the rate settles around. You can also drag the dashed line on the chart.</small>
+        </div>
+        <div class="field">
+          <label for="sigma">Volatility σ <output id="sigmaOut"></output></label>
+          <input type="range" id="sigma" min="0" max="8" step="0.01">
+          <small>Size of the random shocks, % per √year.</small>
+        </div>
+        <div class="field">
+          <label for="r0">Starting rate r₀ <output id="r0Out"></output></label>
+          <input type="range" id="r0" min="0.5" max="35" step="0.01">
+          <small>Today’s short-term rate. You can also drag the dot on the chart.</small>
+        </div>
+        <div class="field">
+          <label for="coupon">Coupon rate <output id="couponOut"></output></label>
+          <input type="range" id="coupon" min="0" max="20" step="0.25">
+          <small>Yearly interest the bond pays, in two half-yearly instalments.</small>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label for="paths">Paths</label>
+            <select id="paths">
+              <option value="5000">5,000</option>
+              <option value="20000">20,000</option>
+              <option value="50000" selected>50,000</option>
+              <option value="100000">100,000</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="seed">Seed</label>
+            <input type="number" id="seed" value="42" min="0" step="1">
+          </div>
+        </div>
+        <div class="run">
+          <button id="start">Start</button>
+          <button id="pause" disabled>Pause</button>
+          <button id="reset">Reset</button>
+        </div>
+      </section>
+
+      <div class="stage">
+        <div class="hero-top">
+          <div class="value">
+            <div class="cap" id="valueCap">Value of the bond today, LKR per 100 face value</div>
+            <span class="num serif" id="bigPrice">–</span><span class="ci" id="bigCi"></span>
+          </div>
+          <div class="verdict idle" id="verdict"></div>
+        </div>
+        <div class="meter"><span id="meterText">0 paths</span>
+          <div class="bar"><i id="meterBar"></i></div>
+        </div>
+
+        <div class="plot hero-plot">
+          <p id="pathsCap"></p>
+          <canvas id="cPaths" role="img" aria-label="Interest-rate paths over the five years of the bond"></canvas>
+          <div class="tip" id="tipPaths"></div>
+        </div>
+
+        <dl class="kpis">
+          <div class="kpi">
+            <dt>Yield to maturity</dt>
+            <dd id="oYtm">–</dd>
+          </div>
+          <div class="kpi">
+            <dt>One-year 95% Value-at-Risk</dt>
+            <dd id="oVar">–</dd>
+          </div>
+          <div class="kpi">
+            <dt>One-year 95% Expected Shortfall</dt>
+            <dd id="oEs">–</dd>
+          </div>
+          <div class="kpi">
+            <dt>Chance of any loss in a year</dt>
+            <dd id="oPloss">–</dd>
+          </div>
+          <div class="kpi">
+            <dt>Zero-coupon price, simulated</dt>
+            <dd id="oZero">–</dd>
+          </div>
+          <div class="kpi">
+            <dt>Zero-coupon price, exact formula</dt>
+            <dd id="oExact">–</dd>
+          </div>
+        </dl>
+        <div class="status" id="status" role="status"></div>
+
+        <div class="trio">
+          <div class="plot">
+            <h2>The estimate settles down</h2>
+            <p>Zero-coupon price as paths accumulate, with its 95% band. Dashed line: the exact value.</p>
+            <canvas id="cConv" role="img"
+              aria-label="Running Monte Carlo price estimate converging to the exact price"></canvas>
+            <div class="tip" id="tipConv"></div>
+          </div>
+          <div class="plot">
+            <h2>Where one year could leave you</h2>
+            <p>Gain or loss after one year in every scenario. The shaded strip is the worst 5%.</p>
+            <canvas id="cLoss" role="img"
+              aria-label="Histogram of the one-year gain or loss with Value-at-Risk marked"></canvas>
+            <div class="tip" id="tipLoss"></div>
+          </div>
+          <div class="plot">
+            <h2>What a later rupee is worth today</h2>
+            <p>Today’s value of one rupee paid on each coupon date. Markers: the exact values.</p>
+            <canvas id="cFlow" role="img" aria-label="Bar chart of discount factors at each payment date"></canvas>
+            <div class="tip" id="tipFlow"></div>
+          </div>
+        </div>
+        <span id="oN" hidden>0</span><span id="oCoupon" hidden>–</span>
+      </div>
+    </div>
+
+    <section class="about" id="about">
+      <h2 class="serif">About and how to use</h2>
+      <p>This page simulates the short-term interest rate with the Vasicek model: the rate is pulled towards a long-run
+        level θ at speed κ while random shocks of size σ push it around. A bond is valued by discounting its payments
+        along every simulated path and averaging the results (Monte Carlo). The same paths give the bond’s value one
+        year from now, which shows how much could be lost.</p>
+      <div class="about-grid">
+        <div>
+          <h3>Steps</h3>
+          <ol>
+            <li>Pick one of the two fitted sets of values, or move the sliders. The chart and the headline value respond
+              at once, using exact formulas.</li>
+            <li>Press <strong>Start</strong>. Paths are simulated in batches and every number updates as they arrive.
+            </li>
+            <li><strong>Pause</strong> freezes the run and <strong>Start</strong> continues it. <strong>Reset</strong>
+              clears it.</li>
+            <li>Changing any value clears the run, because its results no longer belong to the new values.</li>
+          </ol>
+          <h3>Things you can touch</h3>
+          <ul>
+            <li>Drag the dashed line on the main chart to change the long-run rate θ, or the dot at the left edge to
+              change the starting rate.</li>
+            <li>Hover over any chart to read exact values at that point.</li>
+            <li>Use the button at the top right to switch between the white and the dark colour scheme.</li>
+          </ul>
+          <h3>Try this</h3>
+          <p>Run <em>Calm period</em>: the bond is worth about 103 and the Value-at-Risk is negative, so the holder
+            gains even in a bad year. Then run <em>Full history incl. 2022 crisis</em>: the value falls to about 95 and
+            the Value-at-Risk becomes a real loss of about 6. The bond has not changed. Only the assumed behaviour of
+            interest rates has.</p>
+        </div>
+        <div>
+          <h3>Reading the outputs</h3>
+          <ul>
+            <li><strong>Values</strong> are in LKR per 100 of face value. The ± figure is a 95% confidence interval and
+              narrows as paths are added.</li>
+            <li><strong>Exact formula</strong> is the known closed-form Vasicek price of a zero-coupon bond. The
+              simulated price should land close to it.</li>
+            <li><strong>Value-at-Risk</strong> is the one-year loss exceeded in only 5% of scenarios, measured against
+              today’s value and counting coupons received. Negative means a gain.</li>
+            <li><strong>Expected Shortfall</strong> is the average loss within that worst 5%.</li>
+          </ul>
+          <h3>Agreement with the notebook</h3>
+          <p>With the <em>Calm period</em> values and at least 50,000 paths, the simulated zero-coupon price must agree
+            with the notebook’s reference result of <span id="refPrice"></span> within <span id="refTol"></span> LKR.
+            The status line under the figures reports whether it does.</p>
+          <h3>Limitations</h3>
+          <ul>
+            <li>The three model settings stay constant for five years, so the model cannot switch between calm and
+              crisis behaviour.</li>
+            <li>Shocks are normally distributed. Real rates sometimes jump.</li>
+            <li>No extra return for bearing interest-rate risk is included, so model values sit above market prices.
+            </li>
+            <li>The Vasicek model allows negative rates when volatility is high.</li>
+            <li>The one-year revaluation uses the exact Vasicek formula, while the notebook uses a simulated grid. The
+              two agree within 0.05 LKR.</li>
+            <li>Default risk, taxes and trading costs are ignored. This is a teaching tool and not investment advice.
+            </li>
+          </ul>
+        </div>
+      </div>
+      <p>Rate data behind the fitted values: Central Bank of Sri Lanka, “Rates on Government Securities”.</p>
+    </section>
+  </div>
+
   <script src="script.js"></script>
 </body>
+
 </html>
