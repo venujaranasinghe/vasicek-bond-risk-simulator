@@ -4,7 +4,7 @@ The demo runs the bond simulation in your browser. Nothing is installed and noth
 
 ## Opening it
 
-- **Online:** https://USERNAME.github.io/vasicek-bond-risk-simulator/
+- **Online:** https://venujaranasinghe.github.io/vasicek-bond-risk-simulator/
 - **Offline:** download the `docs/` folder and double-click `index.html`. Keep `style.css` and `script.js` in the same folder.
 
 It works in a current version of Chrome, Edge or Firefox.
