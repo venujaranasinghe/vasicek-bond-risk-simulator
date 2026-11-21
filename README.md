@@ -46,7 +46,7 @@ The scope is deliberately narrow: one bond, one source of risk (the short-term i
 **Run the notebook locally.**
 
 ```bash
-git clone https://github.com/USERNAME/vasicek-bond-risk-simulator.git
+git clone https://github.com/venujaranasinghe/vasicek-bond-risk-simulator.git
 cd vasicek-bond-risk-simulator
 pip install -r requirements.txt
 jupyter notebook notebook/vasicek_bond_risk.ipynb
