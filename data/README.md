@@ -6,8 +6,8 @@ Weekly yield rates on Sri Lankan government securities, January 2020 to July 202
 
 - **Source:** Central Bank of Sri Lanka, Data Library, "Rates on Government Securities (Per cent per annum)"
 - **URL:** https://www.cbsl.lk/eResearch/MoneyMarketRatesDefault.aspx?ReportId=6169
-- **Accessed:** [date you downloaded it]
-- **Rights:** Data © Central Bank of Sri Lanka, reproduced with attribution for non-commercial educational use. [Check the CBSL website terms and adjust this line.]
+- **Accessed:** 19 November 2026
+- **Rights:** Data © Central Bank of Sri Lanka, reproduced with attribution for non-commercial educational use.
 
 ### Columns
 

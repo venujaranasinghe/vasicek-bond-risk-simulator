@@ -5,7 +5,7 @@ A Monte Carlo simulator that prices a 5-year Sri Lankan Treasury bond and estima
 ## Live demo
 
 - **Web demo:** https://venujaranasinghe.github.io/vasicek-bond-risk-simulator/
-- **Notebook:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/USERNAME/vasicek-bond-risk-simulator/blob/main/notebook/vasicek_bond_risk.ipynb)
+- **Notebook:** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/venujaranasinghe/vasicek-bond-risk-simulator/blob/main/notebook/vasicek_bond_risk.ipynb)
 
 ## Screenshot
 
